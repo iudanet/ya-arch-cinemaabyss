@@ -1,0 +1,90 @@
+@startuml C2-Containers-ToBe
+title КиноБездна — Container Diagram (To-Be)
+
+!include <C4/C4_Container>
+
+LAYOUT_WITH_LEGEND()
+LAYOUT_TOP_DOWN()
+
+' ==== Клиенты ====
+Person(user, "Пользователь", "Мобильное устройство, ноутбук или смарт-ТВ")
+
+' ==== Внешние системы ====
+System_Ext(recommendations, "Рекомендательная система", "Сторонний сервис подбора фильмов (async)")
+System_Ext(payment_gw, "Платёжные шлюзы", "Внешние платёжные системы")
+System_Ext(loyalty_ext, "Сервисы лояльности", "Внешние партнёрские программы")
+System_Ext(marketplace_ext, "Маркетплейсы", "Внешние партнёрские маркетплейсы")
+
+System_Boundary(cinemaabyss, "КиноБездна") {
+
+    ' ---- Единая точка вызова ----
+    Container(gateway, "API Gateway (Proxy)", "Go / net-http", "Единая точка вызова сервисов. Аутентификация, маршрутизация. Strangler Fig: постепенный перенос трафика по фиче-флагу MOVIES_MIGRATION_PERCENT")
+
+    ' ---- Доменные сервисы (по таблицам монолита, init.sql) ----
+    Container(auth, "Auth Service", "Go", "Аутентификация, токены (users.password_hash)")
+    ContainerDb(auth_db, "auth_db", "PostgreSQL", "Учётные данные, токены")
+
+    Container(users, "Users Service", "Go", "Пользователи (users)")
+    ContainerDb(users_db, "users_db", "PostgreSQL", "Пользователи")
+
+    Container(movies, "Movies Service (метаданные)", "Go", "Видео и метаданные: описание, жанры, рейтинг (movies, movie_genres)")
+    ContainerDb(movies_db, "movies_db", "PostgreSQL", "Фильмы, жанры")
+
+    Container(ratings, "Ratings Service", "Go", "Оценки и отзывы пользователей (user_ratings)")
+    ContainerDb(ratings_db, "ratings_db", "PostgreSQL", "Оценки, отзывы")
+
+    Container(views, "Views Service", "Go", "История просмотров (views)")
+    ContainerDb(views_db, "views_db", "PostgreSQL", "Просмотры")
+
+    Container(payments, "Payments Service", "Go", "Платежи через внешние шлюзы (payments)")
+    ContainerDb(payments_db, "payments_db", "PostgreSQL", "Платежи")
+
+    Container(subscriptions, "Subscriptions Service", "Go", "Подписки и планы (subscriptions)")
+    ContainerDb(subscriptions_db, "subscriptions_db", "PostgreSQL", "Подписки, планы")
+
+    ' ---- Интеграционный слой ----
+    Container(integration, "Integration Service", "Go", "Адаптер к внешним партнёрам (лояльность, маркетплейсы): единое внутреннее API")
+
+    ' ---- Событийная шина ----
+    ContainerQueue(kafka, "Kafka", "Apache Kafka + ZooKeeper", "Шина событий. Топики: movie-events, user-events, payment-events")
+    Container(events, "Events Service", "Go", "MVP событийной интеграции: producer + consumer (задание 2)")
+}
+
+' ==== Клиент → единая точка входа ====
+Rel(user, gateway, "Запросы к API", "HTTPS / REST")
+
+' ==== Gateway → сервисы (sync REST) ====
+Rel(gateway, auth, "Проверка токенов", "REST")
+Rel(gateway, users, "Пользователи", "REST")
+Rel(gateway, movies, "Каталог, метаданные", "REST")
+Rel(gateway, ratings, "Оценки, отзывы", "REST")
+Rel(gateway, views, "История просмотров", "REST")
+Rel(gateway, payments, "Платежи", "REST")
+Rel(gateway, subscriptions, "Подписки", "REST")
+
+' ==== Сервисы → свои БД ====
+Rel(auth, auth_db, "Читает / пишет", "SQL")
+Rel(users, users_db, "Читает / пишет", "SQL")
+Rel(movies, movies_db, "Читает / пишет", "SQL")
+Rel(ratings, ratings_db, "Читает / пишет", "SQL")
+Rel(views, views_db, "Читает / пишет", "SQL")
+Rel(payments, payments_db, "Читает / пишет", "SQL")
+Rel(subscriptions, subscriptions_db, "Читает / пишет", "SQL")
+
+' ==== Внешние интеграции ====
+Rel(payments, payment_gw, "Списание средств", "REST")
+Rel(payments, integration, "Партнёрские эффекты", "REST")
+Rel(integration, loyalty_ext, "Интеграция с лояльностью", "REST")
+Rel(integration, marketplace_ext, "Интеграция с маркетплейсами", "REST")
+Rel(movies, recommendations, "Запрос подборок", "REST, async")
+
+' ==== Событийная шина (Kafka): домены публикуют события ====
+Rel(movies, kafka, "Публикует movie-events", "Kafka")
+Rel(users, kafka, "Публикует user-events", "Kafka")
+Rel(payments, kafka, "Публикует payment-events", "Kafka")
+
+' Events Service (MVP, задание 2): producer + consumer
+Rel(events, kafka, "Producer + consumer (MVP)", "Kafka")
+Rel(kafka, events, "Доставляет события на обработку", "Kafka")
+
+@enduml

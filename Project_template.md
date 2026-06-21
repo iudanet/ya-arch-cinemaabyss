@@ -2,10 +2,29 @@
 
 # Задание 1
 
-1. Спроектируйте to be архитектуру КиноБездны, разделив всю систему на отдельные домены и организовав интеграционное взаимодействие и единую точку вызова сервисов.
-Результат представьте в виде контейнерной диаграммы в нотации С4.
-Добавьте ссылку на файл в этот шаблон
-[ссылка на файл](ссылка)
+1. Спроектируйте To-Be архитектуру КиноБездны, разделив всю систему на отдельные домены и организовав интеграционное взаимодействие и единую точку вызова сервисов.
+Результат представьте в виде контейнерной диаграммы в нотации C4.
+Добавьте ссылку на файл в этот шаблон.
+
+To-Be Container Diagram (C4, уровень Container):
+
+- Исходник: [docs/diagrams/c2-containers-to-be.puml](docs/diagrams/c2-containers-to-be.puml)
+- Изображение: [docs/diagrams/img/C2-Containers-ToBe.png](docs/diagrams/img/C2-Containers-ToBe.png)
+
+![To-Be Container Diagram](docs/diagrams/img/C2-Containers-ToBe.png)
+
+**Сервисы:**
+
+- **API Gateway (Proxy)** — единая точка вызова, аутентификация, маршрутизация, Strangler Fig.
+- **Auth** — аутентификация, токены.
+- **Users** — пользователи.
+- **Movies** — видео и метаданные: описание, жанры, рейтинг.
+- **Ratings** — оценки и отзывы.
+- **Views** — история просмотров.
+- **Payments** — платежи.
+- **Subscriptions** — подписки и планы.
+- **Integration** — адаптер к внешним партнёрам (лояльность, маркетплейсы).
+- **Events** — producer/consumer Kafka (MVP, задание 2).
 
 # Задание 2
 
@@ -46,6 +65,7 @@
    ```
 - Протестируйте постепенный переход, изменив переменную окружения MOVIES_MIGRATION_PERCENT в файле docker-compose.yml.
 
+![Postman tests](docs/screenshots/postman-tests.jpg)
 
 ### 2. Kafka
  Вам как архитектуру нужно также проверить гипотезу насколько просто реализовать применение Kafka в данной архитектуре.
@@ -58,6 +78,10 @@
 
 Необходимые тесты для проверки этого API вызываются при запуске npm run test:local из папки tests/postman 
 Приложите скриншот тестов и скриншот состояния топиков Kafka из UI http://localhost:8090 
+
+![Kafka topics](docs/screenshots/kafka-topics.jpg)
+
+![Kafka messages](docs/screenshots/kafka-messages.jpg)
 
 # Задание 3
 
@@ -275,6 +299,10 @@ cat .docker/config.json | base64
 #### Шаг 3
 Добавьте сюда скриншота вывода при вызове https://cinemaabyss.example.com/api/movies и  скриншот вывода event-service после вызова тестов.
 
+![/api/movies через ingress](docs/screenshots/k8s-movies.jpg)
+
+![Логи event-service](docs/screenshots/k8s-events-logs.jpg)
+
 
 # Задание 4
 Для простоты дальнейшего обновления и развертывания вам как архитектуру необходимо так же реализовать helm-чарты для прокси-сервиса и проверить работу 
@@ -349,6 +377,10 @@ minikube tunnel
 Потом вызовите 
 https://cinemaabyss.example.com/api/movies
 и приложите скриншот развертывания helm и вывода https://cinemaabyss.example.com/api/movies
+
+![Helm-развёртывание](docs/screenshots/helm-deploy.jpg)
+
+![/api/movies (Helm)](docs/screenshots/helm-movies.jpg)
 
 ## Удаляем все
 

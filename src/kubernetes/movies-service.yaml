@@ -22,7 +22,7 @@ spec:
     spec:
       containers:
       - name: movies-service
-        image: ghcr.io/db-exp/cinemaabysstest/movies-service:latest
+        image: ghcr.io/iudanet/ya-arch-cinemaabyss/movies-service:latest
         imagePullPolicy: Always
         ports:
         - containerPort: 8081
@@ -41,7 +41,7 @@ spec:
             cpu: "300m"
             memory: "256Mi"
           requests:
-            cpu: "100m"
+            cpu: "50m"
             memory: "128Mi"
         readinessProbe:
           httpGet:
