@@ -1,0 +1,31 @@
+{
+  "id": "local-shifted-env",
+  "name": "Local Shifted Ports Environment",
+  "values": [
+    {
+      "key": "baseUrl",
+      "value": "http://127.0.0.1:18080",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "moviesServiceUrl",
+      "value": "http://127.0.0.1:18081",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "eventsServiceUrl",
+      "value": "http://127.0.0.1:18082",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "proxyServiceUrl",
+      "value": "http://127.0.0.1:18000",
+      "type": "default",
+      "enabled": true
+    }
+  ],
+  "_postman_variable_scope": "environment"
+}
